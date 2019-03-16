@@ -11,12 +11,13 @@ if __name__ == '__main__':
 		wg = np.load(sys.argv[4])[()]
 		ct = np.load(sys.argv[5])[()]
 	except:
-		tag = sys.argv[1]
-		kv = np.load('kinetic_vapor_%s.npy' % tag)[()]
-		kw = np.load('kinetic_water_%s.npy' % tag)[()]
-		vn = np.load('vapor_number_%s.npy' % tag)[()]
-		wg = np.load('water_gyration_%s.npy' % tag)[()]
-		ct = np.load('water_center_%s.npy' % tag)[()]
+		path = sys.argv[1]
+		tag = sys.argv[2]
+		kv = np.load(os.path.join(path, 'kinetic_vapor_%s.npy' % tag))[()]
+		kw = np.load(os.path.join(path, 'kinetic_water_%s.npy' % tag))[()]
+		vn = np.load(os.path.join(path, 'vapor_number_%s.npy' % tag))[()]
+		wg = np.load(os.path.join(path, 'water_gyration_%s.npy' % tag))[()]
+		ct = np.load(os.path.join(path, 'water_center_%s.npy' % tag))[()]
 
 	plt.plot(np.array(kv.keys()[1:])/1000, kv.values()[1:], 'r.')
 	plt.plot(np.array(kw.keys()[1:])/1000, kw.values()[1:], 'b.')
