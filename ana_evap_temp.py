@@ -66,8 +66,12 @@ if __name__ == '__main__':
 		R_sort = np.sort(R)
 		R_sort_index = np.argsort(R)
 		R_sort_grad = R_sort[1:] - R_sort[:-1]
-		R_grad_max = np.max(R_sort_grad[0:int(n_water*0.2)])
-		candidate = R_sort_index[np.where(R_sort_grad > R_grad_max)[0]+1]
+		R_grad_max = np.max(R_sort_grad[0:int(n_water*0.2)])*2
+		cutoff = np.where(R_sort_grad > R_grad_max)[0]
+		if len(cutoff) == 0:
+			candidate = np.array([])
+		else:
+			candidate = R_sort_index[cutoff[0]+1:]
 		if not args.noback:
 			# contain backed
 			vapor_ind = list(set(candidate))
@@ -88,6 +92,7 @@ if __name__ == '__main__':
 			R_tail = R_sort[:-len(candidate)]
 		else:
 			R_tail = R_sort
+
 		r_mean = np.mean(R_tail[-int(0.1*len(R_tail)):])
 		r_std = np.std(R_tail[-int(0.1*len(R_tail)):])
 		water_radius[t] = [r_mean, r_std]
