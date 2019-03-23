@@ -12,15 +12,20 @@ if __name__ == '__main__':
 
 	tag_1 = args.tags[0]
 	tag_2 = args.tags[1]
+	file_1 = "md_analytics_%s.npy" % tag_1
+	file_2 = "md_analytics_%s.npy" % tag_2
+	d1 = np.load(os.path.join(args.folder, file_1))[()]
+	d2 = np.load(os.path.join(args.folder, file_2))[()]
 
+	re = {}
 	for suff in ['kinetic_vapor', 'kinetic_water', 'vapor_number', 'water_gyration', 'water_center']:
-		file_1 = suff + '_%s.npy' % tag_1
-		file_2 = suff + '_%s.npy' % tag_2
-		file_1 = os.path.join(args.folder, file_1)
-		file_2 = os.path.join(args.folder, file_2)
-		d1 = np.load(file_1)[()]
-		d2 = np.load(file_2)[()]
-		v = dict(d1, **d2)
-		np.save(suff + '_%s%s.npy' % (tag_1, tag_2), v)
+		dx_1 = d1[suff]
+		dx_2 = d2[suff]
+		v = dict(dx_1, **dx_2)
+		re[suff] = v
+
+	newf = 'md_analytics_%s%s.npy' % (tag_1, tag_2)
+	newf = os.path.join(args.folder, newf)
+	np.save(newf, re)
 
 

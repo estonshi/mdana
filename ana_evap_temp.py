@@ -14,13 +14,23 @@ if __name__ == '__main__':
 	parser.add_argument("-r", "--trr", help="path of input .trr file", type=str)
 	parser.add_argument("-p", "--tpr", help="path of input .tpr file", type=str)
 	#parser.add_argument("-b", "--boxl", help="length of md box before enlarge, in A", type=float)
-	parser.add_argument("-f", "--frame", help="frame range, e.g. '0,end' means from 0 to end", type=str, default="0,end")
+	parser.add_argument("-f", "--frame", help="frame range, e.g. '0,end' (default) means from 0 to end", type=str, default="0,end")
+	parser.add_argument("--tbreak", help="time to break analysis, picosecond, default is -1, no break", type=int, default=-1)
 	parser.add_argument("--tag", help="tag that appended to the name of output files, default is '0'", type=str, default="0")
 	parser.add_argument("--noback", help="do not contain backed molecule.", action="store_true", default=False)
+	parser.add_argument("--father", help="if you want to concat several files together for 'noback' mode, give its previous md_analytics file, default is none", type=str, default="none")
 	args = parser.parse_args()
 
 	tprfile = args.tpr
 	trrfile = args.trr
+	prev_vapor_ind = []
+	if args.noback:
+		try:
+			if args.father.lower() != "none":
+				prev_vapor_ind = np.load(args.father)[()]['vapor_index']
+		except:
+			raise ValueError("previous md_analytics file (%s) is in valid!" % args.father)
+
 	#prev_boxl = args.boxl
 	frame_range = args.frame.split(',')
 	frame_range[0] = int(frame_range[0])
@@ -37,7 +47,10 @@ if __name__ == '__main__':
 	box = this.dimensions     # [a,b,c,al,be,ga], in angstrom
 
 	vapor_vel = []
-	vapor_ind = []
+	if args.noback:
+		vapor_ind = prev_vapor_ind
+	else:
+		vapor_ind = []
 	vapor_num_frame = {}
 	E_water_frame = {}
 	E_vapor_frame = {}
@@ -50,7 +63,11 @@ if __name__ == '__main__':
 		t = wt.time
 		if i < frame_range[0]:
 			continue
-		if frame_range[1] != "end" and i>frame_range[1]:
+		elif i == frame_range[0]:
+			print("Trajtory start from %d (ps)" % t)
+		else:
+			pass
+		if t == args.tbreak or (frame_range[1] != "end" and i>frame_range[1]):
 			break
 		# get vapor
 		pos = water.positions
@@ -98,12 +115,17 @@ if __name__ == '__main__':
 		water_radius[t] = [r_mean, r_std]
 
 		# output
-		sys.stdout.write("\r- %d frames are processed." %i)
+		sys.stdout.write("\r- %d frames (%d ps) are processed." %(i, t))
 		sys.stdout.flush()
 	print("\nDone.")
 
-	np.save('vapor_number_%s.npy' % args.tag, vapor_num_frame)
-	np.save('kinetic_water_%s.npy' % args.tag, E_water_frame)
-	np.save('kinetic_vapor_%s.npy' % args.tag, E_vapor_frame)
-	np.save('water_gyration_%s.npy' % args.tag, water_radius)
-	np.save('water_center_%s.npy' % args.tag, water_center)
+	re = {}
+	re['vapor_number'] = vapor_num_frame
+	re['kinetic_water'] = E_water_frame
+	re['kinetic_vapor'] = E_vapor_frame
+	re['water_gyration'] = water_radius
+	re['water_center'] = water_center
+	if args.noback:
+		re['vapor_index'] = vapor_ind
+
+	np.save('md_analytics_%s.npy' % args.tag, re)
