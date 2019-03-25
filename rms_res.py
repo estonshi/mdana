@@ -71,9 +71,9 @@ if __name__ == "__main__":
 
         rms = [None] * args.frames
         tot = [0] * args.frames
-        for i in range(args.frames):
-            f1 = os.path.join(d1, "x%04d.pdb" % i)
-            f2 = os.path.join(d2, "x%04d.pdb" % i)
+        for i in np.arange(args.frames):
+            f1 = os.path.join(d1, "x%04d.pdb" % (i))
+            f2 = os.path.join(d2, "x%04d.pdb" % (i))
             rms[i], tot[i] = cal_rms(f1, f2)
             sys.stdout.write("Processing %d/%d files\r" % (i, args.frames))
             sys.stdout.flush()
