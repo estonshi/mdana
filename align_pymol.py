@@ -21,10 +21,13 @@ if __name__ == '__main__':
     if not os.path.isdir(save_folder):
         os.mkdir(save_folder)
 
-    files1 = glob.glob(os.path.join(d1, "x*.pdb"))
+    files1 = glob.glob(os.path.join(d1, "*.pdb"))
     print("There are %d files." % len(files1))
     for ii,f1 in enumerate(files1):
-        f2 = os.path.join(d2, os.path.split(f1)[-1])
+        if not os.path.isfile(d2):
+            f2 = os.path.join(d2, os.path.split(f1)[-1])
+        else:
+            f2 = d2
         cmd.load(f1, "d1")
         cmd.load(f2, "d2")
         cmd.remove("name h* and d1")

@@ -63,20 +63,37 @@ if __name__ == "__main__":
     if not args.plot_only:
         d1 = args.pdb_folders[0]
         d2 = args.pdb_folders[1]
-        if args.frames <=0 :
-            files1 = len(glob.glob(os.path.join(d1,"*.pdb")))
-            files2 = len(glob.glob(os.path.join(d1,"*.pdb")))
-            args.frames = min(files1, files2)
-        print("Total frames to process : %d" % args.frames)
 
-        rms = [None] * args.frames
-        tot = [0] * args.frames
-        for i in np.arange(args.frames):
-            f1 = os.path.join(d1, "x%04d.pdb" % (i))
-            f2 = os.path.join(d2, "x%04d.pdb" % (i))
-            rms[i], tot[i] = cal_rms(f1, f2)
-            sys.stdout.write("Processing %d/%d files\r" % (i, args.frames))
-            sys.stdout.flush()
+        if not os.path.isfile(d2):
+
+            if args.frames <=0 :
+                files1 = len(glob.glob(os.path.join(d1,"*.pdb")))
+                files2 = len(glob.glob(os.path.join(d1,"*.pdb")))
+                args.frames = min(files1, files2)
+            print("Total frames to process : %d" % args.frames)
+            rms = [None] * args.frames
+            tot = [0] * args.frames
+            for i in np.arange(args.frames):
+                f1 = os.path.join(d1, "x%04d.pdb" % (i))
+                f2 = os.path.join(d2, "x%04d.pdb" % (i))
+                rms[i], tot[i] = cal_rms(f1, f2)
+                sys.stdout.write("Processing %d/%d files\r" % (i, args.frames))
+                sys.stdout.flush()
+
+        else:
+
+            if args.frames <= 0:
+                files1 = len(glob.glob(os.path.join(d1,"*.pdb")))
+                args.frames = files1
+            print("Total frames to process : %d" % args.frames)
+            rms = [None] * args.frames
+            tot = [0] * args.frames
+            for i in np.arange(args.frames):
+                f1 = os.path.join(d1, "x%04d.pdb" % (i))
+                f2 = d2
+                rms[i], tot[i] = cal_rms(f1, f2)
+                sys.stdout.write("Processing %d/%d files\r" % (i, args.frames))
+                sys.stdout.flush()
 
         rms = np.array(rms).T # y-axis is resi number, x-axis is time
         if args.rmsfile.lower() != "none":
