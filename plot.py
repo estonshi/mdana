@@ -13,6 +13,10 @@ def lnatan(x,b,c,d,e):
 def lnsig(x,b,c,d,e):
 	return e*((1-np.exp(-2*d*x))/(1+np.exp(-2*d*x))) + np.log(b*x+1)*c
 
+def phy_tripoly(x,alpha):
+	N = 11100
+	return N-(N**(1.0/3.0)-alpha/3.0*x)**3
+
 def poly_div(x,factor):
 	y = np.zeros(x.shape)
 	for i, kv in enumerate(factor):
@@ -24,7 +28,7 @@ def lnatan_div(x,factor):
 	c = factor[1]
 	d = factor[2]
 	e = factor[3]
-	y = d*e/(d**2*x**2+1) + b*c/(b*x+1)
+	y = d*e/((d*x)**2+1) + b*c/(b*x+1)
 	return y
 
 def lnsig_div(x,factor):
@@ -33,6 +37,13 @@ def lnsig_div(x,factor):
 	d = factor[2]
 	e = factor[3]
 	y = e*d*2/(np.exp(d*x)+np.exp(-1*d*x))**2 + b*c/(b*x+1)
+	return y
+
+def phy_tripoly_div(x,factor):
+	N = 11100
+	alpha = factor[0]
+	#N = popt[1]
+	y = alpha*(N**(1.0/3.0)-alpha/3.0*x)**2
 	return y
 
 if __name__ == '__main__':
@@ -44,8 +55,9 @@ if __name__ == '__main__':
 		vn = data['vapor_number']
 		wg = data['water_gyration']
 		ct = data['water_center']
+		N = 11100
 	except:
-		print("Error occurs.\nUsage: python plot.py <path> <tag> [fit type]('poly'/'lnatan'/'lnsig'/'none')")
+		print("Error occurs.\nUsage: python plot.py <file-path> [fit type]('poly'/'lnatan'/'lnsig'/'phytri'/'none')")
 		sys.exit(1)
 
 	try:
@@ -68,7 +80,7 @@ if __name__ == '__main__':
 	if fittype != "none":
 		#sort_time = np.arange(0,500)    # in ns
 		sort_time = np.sort(np.array(vn.keys()[1:]))/1000    # in ns
-		sort_time = np.arange(0, sort_time.max()*2000)/1000
+		sort_time = np.arange(0, sort_time.max()*3000)/1000
 		if fittype == "poly":
 			popt, pcov = curve_fit(poly, np.array(vn.keys()[1:])/1000, np.array(vn.values()[1:]))
 			perr = np.sqrt(np.mean((poly(np.array(vn.keys()[1:])/1000, popt[0], popt[1], popt[2], popt[3]) - np.array(vn.values()[1:]))**2))
@@ -78,16 +90,22 @@ if __name__ == '__main__':
 		elif fittype == "lnsig":
 			popt, pcov = curve_fit(lnsig, np.array(vn.keys()[1:])/1000, np.array(vn.values()[1:]))
 			perr = np.sqrt(np.mean((lnsig(np.array(vn.keys()[1:])/1000, popt[0], popt[1], popt[2], popt[3]) - np.array(vn.values()[1:]))**2))
+		elif fittype == "phytri":
+			popt, pcov = curve_fit(phy_tripoly, np.array(vn.keys()[1:])/1000, np.array(vn.values()[1:]))
+			perr = np.sqrt(np.mean( (phy_tripoly(np.array(vn.keys()[1:])/1000, popt[0]) - np.array(vn.values()[1:]))**2 ))
 		else:
 			raise RuntimeError("I don't know fit type : %s" % fittype)
 		print("Evaporation description : %s" % popt)
 		print("Fitting rms error       : %f" % perr)
-		if fittype != "poly":
+		if fittype in ['lnatan','lnsig']:
 			x = np.arange(1e8,5e10,1e8)
-			y = 11000-popt[3]-np.log(popt[0]*x+1)*popt[1]
+			y = N-popt[3]-np.log(popt[0]*x+1)*popt[1]
 			zero = np.where(y<0)[0]
 			if len(zero) > 0:
 				print("evaporation stop at     : %f s" % (float(zero[1]*1e8+1e9)/1e9))
+		elif fittype == "phytri":
+			zero = 3.0/popt[0]*N**(1.0/3.0)
+			print("evaporation stop at     : %f s" % (zero/1e9))
 		'''
 		for tmp in zeros:
 			if np.imag(tmp) == 0 and np.real(tmp)>0:
@@ -103,19 +121,24 @@ if __name__ == '__main__':
 			fit_evap = lnsig(sort_time, popt[0], popt[1], popt[2], popt[3])
 			fit_evap_01 = lnsig(sort_time, popt[0], popt[1], 0, 0)
 			fit_evap_02 = lnsig(sort_time, 0, 0, popt[2], popt[3])
+		elif fittype == "phytri":
+			fit_evap = phy_tripoly(sort_time, popt[0])
 		else:
 			raise RuntimeError("I don't know fit type : %s" % fittype)
 		ax.plot(sort_time, fit_evap, '--k', linewidth=3.0)
 		if fittype in ["lnatan", "lnsig"]:
-			ax.plot(sort_time, fit_evap_01, '--b', linewidth=3.0)
+			if np.mean(fit_evap_01) > 1e-2:
+				ax.plot(sort_time, fit_evap_01, '--b', linewidth=3.0)
 			ax.plot(sort_time, fit_evap_02, '--g', linewidth=3.0)
-			ax.legend(["Raw Data","Total Fit","loge part","epsilon part"])
+			#ax.legend(["Raw Data","Total Fit","loge part","epsilon part"])
 		if fittype == "poly":
 			ratio = poly_div(sort_time, popt)
 		elif fittype == "lnatan":
 			ratio = lnatan_div(sort_time, popt)
 		elif fittype == "lnsig":
 			ratio = lnsig_div(sort_time, popt)
+		elif fittype == "phytri":
+			ratio = phy_tripoly_div(sort_time, popt)
 		else:
 			raise RuntimeError("I don't know fit type : %s" % fittype)
 		ax2 = ax.twinx()
