@@ -8,13 +8,13 @@ def poly(x,b,c,d,e):
 	return b*x+c*x**2+d*x**3+e*x**4
 
 def lnatan(x,b,c,d,e):
-	return np.arctan(d*x)*e + np.log(b*x+1)*c
+	return np.arctan(d*x)*e #+ np.log(b*x+1)*c
 
 def lnsig(x,b,c,d,e):
 	return e*((1-np.exp(-2*d*x))/(1+np.exp(-2*d*x))) + np.log(b*x+1)*c
 
 def phy_tripoly(x,alpha):
-	N = 11100
+	N = 3000
 	return N-(N**(1.0/3.0)-alpha/3.0*x)**3
 
 def poly_div(x,factor):
@@ -28,7 +28,7 @@ def lnatan_div(x,factor):
 	c = factor[1]
 	d = factor[2]
 	e = factor[3]
-	y = d*e/((d*x)**2+1) + b*c/(b*x+1)
+	y = d*e/((d*x)**2+1) #+ b*c/(b*x+1)
 	return y
 
 def lnsig_div(x,factor):
@@ -40,7 +40,7 @@ def lnsig_div(x,factor):
 	return y
 
 def phy_tripoly_div(x,factor):
-	N = 11100
+	N = 3000
 	alpha = factor[0]
 	#N = popt[1]
 	y = alpha*(N**(1.0/3.0)-alpha/3.0*x)**2
@@ -55,7 +55,7 @@ if __name__ == '__main__':
 		vn = data['vapor_number']
 		wg = data['water_gyration']
 		ct = data['water_center']
-		N = 11100
+		N = 5112
 	except:
 		print("Error occurs.\nUsage: python plot.py <file-path> [fit type]('poly'/'lnatan'/'lnsig'/'phytri'/'none')")
 		sys.exit(1)
@@ -64,6 +64,12 @@ if __name__ == '__main__':
 		fittype = sys.argv[2]
 	except:
 		fittype = "none"
+
+	try:
+		tst = sys.argv[3]
+		vntst = np.load(tst)[()]['vapor_number']
+	except:
+		vntst = None
 
 	plt.plot(np.array(kv.keys()[1:])/1000, kv.values()[1:], 'r.')
 	plt.plot(np.array(kw.keys()[1:])/1000, kw.values()[1:], 'b.')
@@ -75,6 +81,8 @@ if __name__ == '__main__':
 
 	ax = plt.subplot(111)
 	ax.plot(np.array(vn.keys()[1:])/1000, vn.values()[1:], 'r.')
+	if vntst:
+		ax.plot(np.array(vntst.keys()[1:])/1000, np.array(vntst.values()[1:])+np.max(vn.values()), 'y.')
 	ax.set_title('Evaporation of Water Mocules')
 	ax.set_ylabel('Evaporated Number')
 	if fittype != "none":
@@ -84,25 +92,36 @@ if __name__ == '__main__':
 		if fittype == "poly":
 			popt, pcov = curve_fit(poly, np.array(vn.keys()[1:])/1000, np.array(vn.values()[1:]))
 			perr = np.sqrt(np.mean((poly(np.array(vn.keys()[1:])/1000, popt[0], popt[1], popt[2], popt[3]) - np.array(vn.values()[1:]))**2))
+			if vntst:
+				terr = np.sqrt(np.mean((poly(np.array(vntst.keys()[1:])/1000, popt[0], popt[1], popt[2], popt[3]) - np.array(vntst.values()[1:])-np.max(vn.values()))**2))
 		elif fittype == "lnatan":
 			popt, pcov = curve_fit(lnatan, np.array(vn.keys()[1:])/1000, np.array(vn.values()[1:]))
 			perr = np.sqrt(np.mean((lnatan(np.array(vn.keys()[1:])/1000, popt[0], popt[1], popt[2], popt[3]) - np.array(vn.values()[1:]))**2))
+			if vntst:
+				terr = np.sqrt(np.mean((lnatan(np.array(vntst.keys()[1:])/1000, popt[0], popt[1], popt[2], popt[3]) - np.array(vntst.values()[1:])-np.max(vn.values()))**2))
 		elif fittype == "lnsig":
 			popt, pcov = curve_fit(lnsig, np.array(vn.keys()[1:])/1000, np.array(vn.values()[1:]))
 			perr = np.sqrt(np.mean((lnsig(np.array(vn.keys()[1:])/1000, popt[0], popt[1], popt[2], popt[3]) - np.array(vn.values()[1:]))**2))
+			if vntst:
+				terr = np.sqrt(np.mean((lnsig(np.array(vntst.keys()[1:])/1000, popt[0], popt[1], popt[2], popt[3]) - np.array(vntst.values()[1:])-np.max(vn.values()))**2))
 		elif fittype == "phytri":
 			popt, pcov = curve_fit(phy_tripoly, np.array(vn.keys()[1:])/1000, np.array(vn.values()[1:]))
 			perr = np.sqrt(np.mean( (phy_tripoly(np.array(vn.keys()[1:])/1000, popt[0]) - np.array(vn.values()[1:]))**2 ))
+			if vntst:
+				terr = np.sqrt(np.mean((phy_tripoly(np.array(vntst.keys()[1:])/1000, popt[0]) - np.array(vntst.values()[1:])-np.max(vn.values())-np.max(vn.values()))**2))
 		else:
 			raise RuntimeError("I don't know fit type : %s" % fittype)
 		print("Evaporation description : %s" % popt)
 		print("Fitting rms error       : %f" % perr)
+		if vntst:
+			print("Testing rms error       : %f" % terr)
 		if fittype in ['lnatan','lnsig']:
-			x = np.arange(1e8,5e10,1e8)
-			y = N-popt[3]-np.log(popt[0]*x+1)*popt[1]
-			zero = np.where(y<0)[0]
-			if len(zero) > 0:
-				print("evaporation stop at     : %f s" % (float(zero[1]*1e8+1e9)/1e9))
+			#y = N-popt[3]-np.log(popt[0]*x+1)*popt[1]
+			zero = (np.exp((N-popt[3])/popt[1])-1)/popt[0]
+			if zero > 1e12:
+				print("evaporation stop at     : %e s" % (zero/1e9))
+			elif zero > 0:
+				print("evaporation stop at     : %f s" % (zero/1e9))
 		elif fittype == "phytri":
 			zero = 3.0/popt[0]*N**(1.0/3.0)
 			print("evaporation stop at     : %f s" % (zero/1e9))

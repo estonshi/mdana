@@ -15,7 +15,7 @@ if __name__ == '__main__':
 	parser.add_argument("-p", "--tpr", help="path of input .tpr file", type=str)
 	#parser.add_argument("-b", "--boxl", help="length of md box before enlarge, in A", type=float)
 	parser.add_argument("-f", "--frame", help="frame range, e.g. '0,end' (default) means from 0 to end", type=str, default="0,end")
-	parser.add_argument("--tbreak", help="time to break analysis, picosecond, default is -1, no break", type=int, default=-1)
+	parser.add_argument("--tbreak", help="time to break analysis, picosecond, default is inf, no break", type=float, default=np.float("inf"))
 	parser.add_argument("--tag", help="tag that appended to the name of output files, default is '0'", type=str, default="0")
 	parser.add_argument("--noback", help="do not contain backed molecule.", action="store_true", default=False)
 	parser.add_argument("--father", help="if you want to concat several files together for 'noback' mode, give its previous md_analytics file, default is none", type=str, default="none")
@@ -67,15 +67,19 @@ if __name__ == '__main__':
 			print("Trajtory start from %d (ps)" % t)
 		else:
 			pass
-		if t == args.tbreak or (frame_range[1] != "end" and i>frame_range[1]):
+		if t >= args.tbreak or (frame_range[1] != "end" and i>frame_range[1]):
 			break
+		#ca_pos = np.mean(CA.positions,axis=0)
+		#print ca_pos
 		# get vapor
 		pos = water.positions
+		ca_pos = CA.positions
 		vel = water.velocities
 		n_water = len(vel)
 		# get center
 		prev_vapor_index = copy.copy(vapor_ind)
-		center = (np.sum(pos, axis=0) - np.sum(pos[prev_vapor_index], axis=0)) / (len(pos) - len(prev_vapor_index))
+		#center = (np.sum(pos, axis=0) - np.sum(pos[prev_vapor_index], axis=0)) / (len(pos) - len(prev_vapor_index))
+		center = np.mean(ca_pos, axis=0)
 		water_center[t] = center
 		# calculate new vapor molecues
 		E_all = np.sum(np.linalg.norm(vel, axis=1)**2)
