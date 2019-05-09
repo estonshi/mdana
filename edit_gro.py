@@ -151,7 +151,7 @@ if __name__ == "__main__":
         write_gro(savefile, D)
         # edit topol?
         if os.path.isfile(args.top):
-            newtop = os.path.splitext(args.top)[0] + '_%s' % tag + '.top'
+            newtop = os.path.splitext(args.top)[0][0:-3] + '%s' % tag + '.top'
             print("Edit %s to %s." % (args.top, newtop))
             with open(args.top, 'r') as fp:
                 lines = fp.readlines()
