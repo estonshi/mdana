@@ -98,7 +98,7 @@ if __name__ == "__main__":
     if not os.path.isfile(grofile):
         raise RuntimeError("gro file is invalid")
     tag = args.tag
-    savefile = os.path.splitext(grofile)[0] + "_%s" % tag + ".gro"
+    savefile = os.path.splitext(grofile)[0][0:-3] + "%s" % tag + ".gro"
     mode = args.mode
     if mode not in ['DROPEVA']:
         raise RuntimeError("Don't support mode :%s" % mode)
