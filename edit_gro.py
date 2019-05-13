@@ -2,7 +2,7 @@ import numpy as np
 import sys
 import os
 import argparse
-import re
+import re as sre
 
 def parse_coor(line):
     re = [None] * 10
@@ -10,7 +10,7 @@ def parse_coor(line):
     re[1] = line[5:10].strip()
     re[2] = line[10:15].strip()
     re[3] = int(line[15:20])
-    tmp = re.findall(r"\-?\d+\.?\d*", re[20:-24])
+    tmp = sre.findall(r"\-?\d+\.?\d*", re[20:-24])
     re[4] = float(tmp[0])
     re[5] = float(tmp[1])
     re[6] = float(tmp[2])
