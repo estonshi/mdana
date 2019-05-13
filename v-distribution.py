@@ -28,6 +28,8 @@ if __name__ == "__main__":
     box = this.dimensions
     vapor_ind = []
     vapor_vel = []
+    vapor_vel_info = {}
+    vel_info = {}
 
     for wt in this.trajectory:
         i = wt.frame
@@ -55,14 +57,17 @@ if __name__ == "__main__":
         vapor_ind.extend(list(set(candidate)))
         vapor_vel.extend(vel[list(set(candidate))])
         if (i+1)%args.window == 0:
-            print("%d frames are processed" % (i+1))
+            sys.stdout.write("%d frames are processed\r" % (i+1))
+            sys.stdout.flush()
             vapor_ind = set(vapor_ind)
             cluster_ind = set.difference(set(range(n_water)), vapor_ind)
             vapor_ind = list(vapor_ind)
             cluster_ind = list(cluster_ind)
+            vapor_vel_info[i+1] = [np.mean(vapor_vel), np.std(vapor_vel)]
+            vel_info[i+1] = [np.mean(vel), np.std(vel)]
+            '''
             # plot
             bins = np.linspace(0,20,20)
-
             plt.hist(vel, bins=bins, color="r")
             plt.hist(vapor_vel, bins=bins, color="b")
             plt.xlabel("V (nm/ps)")
@@ -77,6 +82,9 @@ if __name__ == "__main__":
                 plt.clf()
             else:
                 plt.show()
+            '''
             # refresh
             del vapor_ind[:]
             del vapor_vel[:]
+
+        np.save(os.path.join(args.save, 'statittics.npy'),{'total':vel_info, 'vapor':vapor_vel_info})

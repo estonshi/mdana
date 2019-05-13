@@ -2,6 +2,7 @@ import numpy as np
 import sys
 import os
 import argparse
+import re
 
 def parse_coor(line):
     re = [None] * 10
@@ -9,12 +10,13 @@ def parse_coor(line):
     re[1] = line[5:10].strip()
     re[2] = line[10:15].strip()
     re[3] = int(line[15:20])
-    re[4] = float(line[20:28])
-    re[5] = float(line[28:36])
-    re[6] = float(line[36:44])
-    re[7] = float(line[44:52])
-    re[8] = float(line[52:60])
-    re[9] = float(line[60:68])
+    tmp = re.findall(r"\-?\d+\.?\d*", re[20:-24])
+    re[4] = float(tmp[0])
+    re[5] = float(tmp[1])
+    re[6] = float(tmp[2])
+    re[7] = float(line[-24:-16])
+    re[8] = float(line[-16:-8])
+    re[9] = float(line[-8:])
     return re
 
 def read_gro(grofile, ions=['cl']):
