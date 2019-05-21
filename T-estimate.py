@@ -13,7 +13,7 @@ if __name__ == "__main__":
     parser.add_argument("--trr", type=str, help="path of trr file")
     parser.add_argument("--tpr", type=str, help="path of tpr file")
     parser.add_argument("--window", type=int, help="frame window to calculate distribution", default=50)
-    parser.add_argument("--save", type=str, help="folder to save .npy files", default="none")
+    parser.add_argument("--save", type=str, help="give a file (.npy) to save result", default="none")
     args = parser.parse_args()
 
     tprfile = args.tpr
@@ -54,4 +54,4 @@ if __name__ == "__main__":
         mean_V2.append(mv2)
         mean_V2_vap.append(np.mean(vapor_vel**2))
 
-    np.save(os.path.join(args.save, "mean_v2.npy"), {"mean_v2":mean_V2, "mean_v2_vap":mean_V2_vap})
+    np.save(args.save, {"mean_v2":mean_V2, "mean_v2_vap":mean_V2_vap})
