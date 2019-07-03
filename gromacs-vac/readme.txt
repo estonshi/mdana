@@ -10,18 +10,22 @@ I. Start a project
     $ ./initiate.sh ~/Documents/startup
     '''
 
-II. Run vacuum simulation
-    The simplest way to start simulation is to run
+II. Edit submit.sh
+    Here "submit.sh" should be re-edit to submit jobs in your environment.
+    The default script is designed for Sugon cluster.
+
+III. Run vacuum simulation
+    The simplest way to start simulation is running
     '''
     $ ./timer.sh
     '''
-    The scripts will generate input files, submit jobs and monitor job status automatically.
-    Each simulation lasts 1 nanosecond, then output ".gro" & ".top" file will be checked and updated to generate new input files for next 1ns simulation.
-    If you just want to submit only next 1ns simulation, run
+    The scripts will automaticaly generate input files, submit jobs and monitor status.
+    Each simulation lasts for 1 nanosecond. The output ".gro" & ".top" files will be updated to generate new input files for the next 1ns' simulation.
+    If you just want to submit the only next 1ns simulation, run
     '''
     $ ./autoload.sh
     '''
-    Other bash and python scripts are supported files.
+    Other bash and python scripts are for supporting.
 
 III. Analysis
     There is a "analysis" folder in the project for further analyzing.
